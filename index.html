@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>臺科法律與生活考前測驗練習</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⚖️</text></svg>">
+    
+    <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #e2e8f0; /* Slate 200 */
+            touch-action: manipulation;
+        }
+        .neon-text {
+            text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        }
+        .neon-purple {
+            text-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+        .input-glow:focus {
+            box-shadow: 0 0 15px rgba(168, 85, 247, 0.5);
+            border-color: #a855f7;
+        }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake { animation: shake 0.3s ease-in-out; }
+        
+        .btn-press:active { transform: scale(0.98); }
+        
+        .fade-in { animation: fadeIn 0.5s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-4">
+
+    <div id="root" class="w-full max-w-2xl"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef, useCallback } = React;
+
+        // ==========================================
+        // 資料庫區域 (Database)
+        // ==========================================
+
+        // --- 期中考題庫 ---
+        const MIDTERM_QUESTIONS = [
+            // 1. 妨害司法公正
+            { q: "刑法第173條規定，若對證人、鑑定人或通譯行賄、約定、交付不正利益，處______年以下徒刑。", a: "3" },
+            { q: "刑法第173條規定，對證人行賄者，得併科______萬元以下罰金。", a: "30" },
+        ];
+
+        // --- 期末考題庫 ---
+        const FINAL_QUESTIONS = [
+            // 消保法
+            { q: "消保法定義的消費者，是指以消費為目的而為交易、使用商品或接受______者。", a: "服務" },
+            { q: "雖非直接交易當事人，但因消費行為而受到權益影響之關係人，稱為______。", a: "第三人" },
+            { q: "企業經營者是指以生產、製造、進口、經銷或提供商品或服務為______之自然人或法人。", a: "營業" },
+            { q: "消費關係中，對弱勢地位者提供特殊保護，例如透過______責任倒置來平衡資訊不對稱。", a: "舉證" },
+            
+            // 消保法第7條
+            { q: "依消保法第7條，企業經營者應確保商品或服務符合當時______或專業水準可合理期待之安全性。", a: "科技" },
+            { q: "商品或服務有危害可能時，應於明顯處為______標示及緊急處理危險之方法。", a: "警告" },
+            { q: "企業經營者違反消保法第7條規定，致生損害於消費者或第三人時，應負______賠償責任。", a: "連帶" },
+            { q: "若企業經營者能證明其無過失者，法院得______其賠償責任。", a: "減輕" },
+            { q: "消保法第7條第3項明確將______納入保護範圍，超越了直接消費者。", a: "第三人" },
+            { q: "當危險屬於日常生活可預見範圍內，且消費者有能力自行判斷時，消費者須______負責。", a: "自行" },
+            { q: "旅宿業遭他人裝設微型錄影設備，涉及產品本質安全，______須負擔責任。", a: "業者" },
+
+            // 服務安全與判斷標準
+            { q: "判斷服務安全欠缺與否，其中一個標準是依據______觀點判斷，而非以專業角度評估。", a: "一般人" },
+
+            // 私法三大原則
+            { q: "近代私法的三大原則包含：所有權絕對原則、______自由原則、過失責任原則。", a: "契約" },
+            { q: "過失責任原則強調行為人必須存在______行為，才需承擔賠償責任。", a: "過失" },
+            { q: "契約自由原則在現代受到限制，例如契約內容不得違背公共秩序與______。", a: "善良風俗" },
+            { q: "由企業預先擬定、內容固定且大量使用的契約，稱為______契約。", a: "定型化" },
+
+            // 定型化契約
+            { q: "定型化契約中之條款違反______原則，對消費者顯失公平者，無效。", a: "誠信" },
+            { q: "定型化契約條款若違反______互惠原則，推定其顯失公平。", a: "平等" },
+            { q: "中央主管機關為預防消費糾紛，得擬訂定型化契約應記載或______記載事項。", a: "不得" },
+            { q: "違反公告之應記載或不得記載事項，該定型化契約條款______。", a: "無效" },
+
+            // 契約成立
+            { q: "依民法第153條，當事人互相表示意思______者，契約即為成立。", a: "一致" },
+            { q: "買賣契約中，物之出賣人負交付其物於買受人，並使其取得該物______之義務。", a: "所有權" },
+
+            // 法律保留與比例原則
+            { q: "______保留原則強調政府對人民自由權利的限制必須具有法律依據。", a: "法律" },
+            { q: "比例原則中的______性原則，指手段必須是合適的，可有效達成預期目標。", a: "適當" },
+            { q: "比例原則中的______性原則，又稱「侵害最小原則」，指應採取對人民侵害最小的手段。", a: "必要" },
+            { q: "狹義比例原則要求國家權力所造成的侵害，與欲達成之目的間應有相當的______。", a: "平衡" },
+            { q: "定型化契約若解釋有模糊，應為有利於______之解釋。", a: "消費者" },
+            
+            // 租賃住宅
+            { q: "房屋修繕義務原則上由______負責，除非另有約定或可歸責於承租人。", a: "出租人" },
+            { q: "承租人應以______管理人之注意，保管、使用租賃住宅。", a: "善良" },
+            { q: "租賃契約提前終止之違約金，最高不得超過______個月租金。", a: "1" },
+            { q: "租約中不得約定承租人不得遷入______。", a: "戶籍" },
+            { q: "租約中不得約定承租人禁止申請房屋租金______。", a: "補貼" },
+            { q: "房東需舉證證明房客有______破壞情事才能扣押金，自然耗損不行。", a: "人為" },
+
+            // 通訊交易
+            { q: "通訊交易是指透過廣播、電視、網路等方式銷售，消費者無法直接看到______。", a: "實體" },
+            { q: "通訊交易消費者得於收受商品後______日內，無條件解除契約。", a: "7" },
+            { q: "通訊交易解約無須說明理由及負擔任何______。", a: "費用" },
+            { q: "通訊交易有______例外情事者，不適用7日解除權。", a: "合理" },
+            { q: "若企業未提供解除契約相關資訊，7日猶豫期自提供之______日起算。", a: "次" },
+            { q: "但自收受商品起算已逾______個月者，解除權消滅。", a: "4" },
+
+            // 合理例外情事
+            { q: "易於腐敗、保存期限較短或解約時即將逾期之商品，屬於通訊交易的______例外情事。", a: "合理" },
+            { q: "依消費者要求所為之______化給付，排除7日解除權之適用。", a: "客製" },
+            { q: "已拆封之______衛生用品，排除7日解除權之適用。", a: "個人" },
+            { q: "經消費者拆封之影音商品或______軟體，排除7日解除權。", a: "電腦" },
+
+            // 特種交易法律效果
+            { q: "通訊交易解約後，企業經營者應於收到通知次日起______日內取回商品。", a: "15" },
+            { q: "契約解除後，關於回復原狀之約定，若較民法規定不利於消費者者，______。", a: "無效" },
+
+            // 禮券
+            { q: "禮券定型化契約不得記載______期限。", a: "使用" },
+            { q: "禮券不得記載未使用完之餘額______消費。", a: "不得" },
+
+            // 訪問交易
+            { q: "訪問交易的要件之一是業者______邀約，主動前往消費者處所。", a: "未經" },
+            { q: "街頭派發傳單或臨時攤位推銷，屬於______交易。", a: "訪問" },
+            { q: "判斷是否為訪問交易，應斟酌消費者有無同類商品之______機會。", a: "比較" },
+
+            // 國家賠償
+            { q: "公務員執行職務行使公權力，因故意或______不法侵害人民權利，國家應負賠償責任。", a: "過失" },
+            { q: "公務員______於執行職務，致人民自由或權利受損，國家亦應賠償。", a: "怠" },
+            { q: "公共設施因設置或______有欠缺，致人民受損，國家應負賠償責任。", a: "管理" },
+            { q: "受委託行使公權力的個人或團體，於執行職務時視同______。", a: "公務員" },
+            { q: "於開放之山域、水域，經管理機關已為適當之______，人民仍冒險，國家不負賠償責任。", a: "警告" },
+
+            // 勞動基準法 - 終止契約
+            { q: "雇主歇業或轉讓時，得______預告終止勞動契約。", a: "不經" },
+            { q: "勞工對於雇主實施______或有重大侮辱之行為者，雇主得不經預告終止契約。", a: "暴行" },
+            { q: "勞工無正當理由繼續曠工______日，雇主得不經預告終止契約。", a: "3" },
+            { q: "勞工一個月內曠工達______日者，雇主得不經預告終止契約。", a: "6" },
+            { q: "勞工違反勞動契約情節重大者，雇主得______預告終止契約。", a: "不經" },
+            { q: "勞工受有期徒刑宣告確定且未獲______或易科罰金，雇主得不經預告解雇。", a: "緩刑" },
+
+            // 勞動基準法 - 調動
+            { q: "雇主調動勞工工作，不得違反勞動契約，且應符合調動______原則。", a: "五" },
+            { q: "調動工作地點過遠，雇主應予以必要之______。", a: "協助" },
+
+            // 試用期與年限
+            { q: "勞工於試用期間之相關勞動權益，與一般受僱勞工______。", a: "無異" },
+            { q: "勞工試用期滿經考核不適任，雇主應給付______費。", a: "資遣" },
+            { q: "雇主若未提供專業技術培訓及費用，不得與勞工約定______服務年限。", a: "最低" },
+            { q: "若勞動契約因不可歸責於勞工之事由終止，勞工不負返還______費用之責任。", a: "訓練" },
+
+            // 競業禁止
+            { q: "雇主須有應受保護之正當______利益，始得約定離職後競業禁止。", a: "營業" },
+            { q: "離職後競業禁止之期間，最長不得逾______年。", a: "2" },
+            { q: "雇主對勞工因不從事競業行為所受損失應有合理______。", a: "補償" },
+
+            // 資遣預告與證明
+            { q: "勞工工作3個月以上1年未滿者，雇主應於______日前預告資遣。", a: "10" },
+            { q: "勞工工作1年以上3年未滿者，雇主應於______日前預告資遣。", a: "20" },
+            { q: "勞工工作3年以上者，雇主應於______日前預告資遣。", a: "30" },
+            { q: "勞動契約終止時，勞工請求發給______證明書，雇主不得拒絕。", a: "服務" },
+
+            // 消費者三不守則
+            { q: "消費者三不守則：危險的公共場所不去、標示不全的商品不買、問題的______藥品不吃。", a: "食品" }
+        ];
+
+        // Fisher-Yates Shuffle
+        const shuffleArray = (array) => {
+            let newArr = [...array];
+            for (let i = newArr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+            }
+            return newArr;
+        };
+
+        const generateQuestions = (dataset) => {
+            return dataset.map((q, i) => ({ ...q, id: i + 1 }));
+        };
+
+        // ==========================================
+        // 元件區域 (Components)
+        // ==========================================
+
+        function SelectionScreen({ onSelect }) {
+            return (
+                <div className="w-full max-w-4xl mx-auto p-4 flex flex-col items-center fade-in">
+                    <div className="mb-12 text-center">
+                        <div className="text-6xl mb-4">⚖️</div>
+                        <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 neon-text tracking-wider">
+                            臺科法律與生活
+                        </h1>
+                        <p className="text-slate-400 text-lg md:text-xl font-light tracking-widest">
+                            考前練習
+                        </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
+                        <button 
+                            onClick={() => onSelect('midterm')}
+                            className="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-blue-500 rounded-3xl p-8 transition-all duration-300 card-hover text-left relative overflow-hidden btn-press"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span className="text-9xl">📚</span>
+                            </div>
+                            <h2 className="text-3xl font-bold text-blue-400 mb-4 neon-text group-hover:translate-x-2 transition-transform">
+                                期中考範圍
+                            </h2>
+                            <p className="text-slate-400 mb-6 group-hover:text-slate-300">
+                                涵蓋：妨害司法、法律原則、刑法、醫療法等基礎法學概念。
+                            </p>
+                            <div className="inline-flex items-center text-blue-400 font-bold group-hover:text-blue-300">
+                                開始測驗 <span className="ml-2">➜</span>
+                            </div>
+                        </button>
+
+                        <button 
+                            onClick={() => onSelect('final')}
+                            className="group bg-slate-800 hover:bg-slate-700 border-2 border-slate-600 hover:border-purple-500 rounded-3xl p-8 transition-all duration-300 card-hover text-left relative overflow-hidden btn-press"
+                        >
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <span className="text-9xl">🎓</span>
+                            </div>
+                            <h2 className="text-3xl font-bold text-purple-400 mb-4 neon-purple group-hover:translate-x-2 transition-transform">
+                                期末考範圍
+                            </h2>
+                            <p className="text-slate-400 mb-6 group-hover:text-slate-300">
+                                涵蓋：消保法、勞動基準法、國家賠償、定型化契約等生活應用。
+                            </p>
+                            <div className="inline-flex items-center text-purple-400 font-bold group-hover:text-purple-300">
+                                開始測驗 <span className="ml-2">➜</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div className="mt-12 text-slate-600 text-sm font-mono">
+                        <a href="https://github.yijiun.me" target="_blank" rel="noopener noreferrer" className="hover:text-slate-400 transition-colors">
+                            Designed for NTUST • Made by <span className="underline">Yi Jiun Chin</span>
+                        </a>
+                    </div>
+                </div>
+            );
+        }
+
+        function QuizApp({ dataset, examTitle, onBackToMenu }) {
+            const [questions, setQuestions] = useState([]);
+            const [wrongQuestions, setWrongQuestions] = useState([]);
+            const [currentIndex, setCurrentIndex] = useState(0);
+            const [inputValue, setInputValue] = useState("");
+            const [feedback, setFeedback] = useState(null); 
+            const [score, setScore] = useState(0);
+            const [isFinished, setIsFinished] = useState(false);
+            const [shake, setShake] = useState(false);
+            const [isLoading, setIsLoading] = useState(true);
+            const [isReviewMode, setIsReviewMode] = useState(false);
+
+            // Refs
+            const inputRef = useRef(null);
+            const nextBtnRef = useRef(null);
+            const reviewBtnRef = useRef(null);
+            const restartBtnRef = useRef(null);
+
+            // 初始化
+            const initGame = useCallback(() => {
+                const baseQuestions = generateQuestions(dataset);
+                const shuffled = shuffleArray(baseQuestions);
+                setQuestions(shuffled);
+                setWrongQuestions([]);
+                setCurrentIndex(0);
+                setInputValue("");
+                setFeedback(null);
+                setScore(0);
+                setIsFinished(false);
+                setIsLoading(false);
+                setIsReviewMode(false);
+            }, [dataset]);
+
+            // 錯題特訓模式
+            const startReview = () => {
+                if (wrongQuestions.length === 0) return;
+                const shuffledWrong = shuffleArray(wrongQuestions);
+                setQuestions(shuffledWrong);
+                setWrongQuestions([]); 
+                setCurrentIndex(0);
+                setInputValue("");
+                setFeedback(null);
+                setScore(0);
+                setIsFinished(false);
+                setIsReviewMode(true);
+            };
+
+            useEffect(() => {
+                initGame();
+            }, [initGame]);
+
+            // 聚焦邏輯
+            useEffect(() => {
+                if (isLoading) return;
+
+                if (isFinished) {
+                    setTimeout(() => {
+                        if (wrongQuestions.length > 0) {
+                            reviewBtnRef.current?.focus();
+                        } else {
+                            restartBtnRef.current?.focus();
+                        }
+                    }, 100);
+                    return;
+                }
+
+                if (feedback) {
+                    setTimeout(() => nextBtnRef.current?.focus(), 50);
+                } else {
+                    setTimeout(() => inputRef.current?.focus(), 50);
+                }
+            }, [feedback, isFinished, isLoading, currentIndex, wrongQuestions.length]);
+
+            const checkAnswer = () => {
+                if (!questions[currentIndex]) return;
+                
+                const userAns = inputValue.trim().toLowerCase();
+                const correctAns = questions[currentIndex].a.trim().toLowerCase();
+                // 寬鬆比對 logic
+                const isNumeric = /^\d+$/.test(correctAns);
+                const isCorrect = isNumeric 
+                    ? userAns === correctAns
+                    : (userAns === correctAns || (userAns.length >= 1 && (userAns.includes(correctAns) || correctAns.includes(userAns))));
+
+                if (isCorrect) {
+                    setFeedback('correct');
+                    setScore(s => s + 1);
+                } else {
+                    setFeedback('incorrect');
+                    setShake(true);
+                    setWrongQuestions(prev => [...prev, questions[currentIndex]]);
+                    setTimeout(() => setShake(false), 300);
+                }
+            };
+
+            const handleKeyDown = (e) => {
+                if (e.key === 'Enter') {
+                    if (feedback) {
+                        nextQuestion();
+                    } else {
+                        if (inputValue.trim() === "") return;
+                        checkAnswer();
+                    }
+                }
+            };
+
+            const nextQuestion = () => {
+                setFeedback(null);
+                setInputValue("");
+                if (currentIndex < questions.length - 1) {
+                    setCurrentIndex(c => c + 1);
+                } else {
+                    setIsFinished(true);
+                }
+            };
+
+            if (isLoading) return <div className="text-white text-center mt-20">Loading...</div>;
+
+            // 結束畫面
+            if (isFinished) {
+                const isPerfect = score === questions.length;
+                
+                return (
+                    <div className="bg-slate-800 p-8 rounded-2xl shadow-2xl text-center border border-slate-700 w-full animate-fade-in max-w-lg mx-auto mt-10 fade-in relative">
+                        {/* Back Button */}
+                        <button 
+                            onClick={onBackToMenu}
+                            className="absolute top-4 left-4 text-slate-400 hover:text-white transition-colors flex items-center gap-1 text-sm font-bold"
+                        >
+                            ← 回主選單
+                        </button>
+
+                        <h2 className="text-4xl font-bold mb-6 text-purple-400 neon-text mt-6">
+                            {isReviewMode ? "複習結束！" : `${examTitle}測驗練習結束！`}
+                        </h2>
+                        
+                        <div className="text-6xl font-black mb-4 text-cyan-400">
+                            {score} / {questions.length}
+                        </div>
+                        
+                        <p className="text-slate-400 mb-8 text-lg">
+                            {isPerfect ? "完美！所有的題目都被你消滅了！🎉" : 
+                             `抓到 ${wrongQuestions.length} 題答錯，要不要立刻補考？`}
+                        </p>
+
+                        <div className="flex flex-col gap-4">
+                            {wrongQuestions.length > 0 && (
+                                <button 
+                                    ref={reviewBtnRef}
+                                    onClick={startReview}
+                                    className="bg-orange-600 hover:bg-orange-500 text-white font-bold py-4 px-10 rounded-full text-xl transition-all w-full shadow-lg btn-press flex items-center justify-center gap-2 ring-2 ring-orange-400 animate-pulse"
+                                >
+                                    <span>🔥</span> 錯題特訓（{wrongQuestions.length} 題）
+                                </button>
+                            )}
+
+                            <button 
+                                ref={restartBtnRef}
+                                onClick={initGame}
+                                className={`${wrongQuestions.length > 0 ? 'bg-slate-700 hover:bg-slate-600' : 'bg-purple-600 hover:bg-purple-500'} text-white font-bold py-4 px-10 rounded-full text-xl transition-all w-full shadow-lg btn-press`}
+                            >
+                                {wrongQuestions.length > 0 ? "放棄複習，全部重來 ↻" : "全部重新測驗 ↻"}
+                            </button>
+
+                            <button 
+                                onClick={onBackToMenu}
+                                className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold py-3 px-10 rounded-full text-lg transition-all w-full btn-press"
+                            >
+                                回到主選單
+                            </button>
+                        </div>
+                    </div>
+                );
+            }
+
+            const currentQ = questions[currentIndex];
+            const progressColor = isReviewMode 
+                ? "from-orange-400 to-red-500" 
+                : (score > currentIndex * 0.8 ? "from-green-400 to-cyan-500" : "from-blue-400 to-purple-500");
+
+            return (
+                <div className="w-full max-w-lg mx-auto flex flex-col h-full justify-center">
+                    
+                    {/* Top Bar */}
+                    <div className="flex justify-between items-center mb-4 px-1">
+                        <button onClick={onBackToMenu} className="text-slate-500 hover:text-white transition-colors text-sm font-bold flex items-center">
+                            ← 離開
+                        </button>
+                        <span className="text-slate-500 text-sm font-bold tracking-widest uppercase">{examTitle}</span>
+                    </div>
+
+                    {/* Progress Bar */}
+                    <div className="w-full bg-slate-700 h-2 rounded-full mb-6 overflow-hidden">
+                        <div 
+                            className={`bg-gradient-to-r ${progressColor} h-2 transition-all duration-300 ease-out`}
+                            style={{ width: `${((currentIndex + 1) / questions.length) * 100}%` }}
+                        ></div>
+                    </div>
+
+                    <div className={`bg-slate-800 p-6 md:p-8 rounded-2xl shadow-2xl border ${isReviewMode ? 'border-orange-500/50' : 'border-slate-700'} relative overflow-hidden flex flex-col gap-4 transition-colors duration-500`}>
+                        
+                        {/* Header Info */}
+                        <div className="flex justify-between items-center text-slate-400 text-sm font-mono">
+                            <span className={isReviewMode ? "text-orange-400 font-bold" : ""}>
+                                {isReviewMode ? "⚠️ REVIEW MODE" : `Q ${currentIndex + 1} / ${questions.length}`}
+                            </span>
+                            <span>Score: {score}</span>
+                        </div>
+
+                        {/* Question Text */}
+                        <div className="min-h-[100px] flex items-center justify-center">
+                            <h3 className="text-2xl font-bold leading-relaxed text-slate-100 text-center">
+                                {currentQ && currentQ.q.split('______').map((part, i, arr) => (
+                                    <span key={i}>
+                                        {part}
+                                        {i < arr.length - 1 && (
+                                            <span className={`inline-block border-b-4 px-2 mx-1 min-w-[60px] text-center transition-colors duration-300 ${
+                                                feedback === 'correct' ? 'border-green-500 text-green-400' : 
+                                                feedback === 'incorrect' ? 'border-red-500 text-red-400' : 'border-purple-500 text-transparent'
+                                            }`}>
+                                                {feedback ? currentQ.a : "?"}
+                                            </span>
+                                        )}
+                                    </span>
+                                ))}
+                            </h3>
+                        </div>
+
+                        {/* Input Area */}
+                        <div className={`relative ${shake ? 'shake' : ''}`}>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyDown={handleKeyDown}
+                                disabled={!!feedback}
+                                placeholder="輸入答案..."
+                                className="w-full bg-slate-900 border-2 border-slate-600 text-white text-xl p-4 rounded-xl focus:outline-none input-glow transition-all placeholder-slate-600 text-center"
+                                autoComplete="off"
+                            />
+                        </div>
+
+                        {/* Feedback Area */}
+                        <div className={`h-12 flex items-center justify-center font-bold text-center transition-opacity duration-200 ${feedback ? 'opacity-100' : 'opacity-0'}`}>
+                            {feedback === 'correct' && <span className="text-green-400 text-lg">✅ 正確！</span>}
+                            {feedback === 'incorrect' && <span className="text-red-400 text-lg">❌ 答案是：{currentQ.a}</span>}
+                        </div>
+
+                        {/* Action Buttons */}
+                        <div className="mt-2">
+                            {!feedback ? (
+                                <button
+                                    onClick={() => {
+                                        if (inputValue.trim() !== "") checkAnswer();
+                                    }}
+                                    className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xl font-bold py-4 rounded-xl shadow-lg transition-transform btn-press focus:ring-4 focus:ring-blue-400 outline-none"
+                                >
+                                    送出答案
+                                </button>
+                            ) : (
+                                <button
+                                    ref={nextBtnRef}
+                                    onClick={nextQuestion}
+                                    className="w-full bg-green-600 hover:bg-green-500 text-white text-xl font-bold py-4 rounded-xl shadow-lg transition-transform btn-press focus:ring-4 focus:ring-green-400 outline-none flex items-center justify-center gap-2"
+                                >
+                                    下一題 ➜
+                                </button>
+                            )}
+                        </div>
+
+                    </div>
+                    
+                    {/* Mobile Hint */}
+                    <div className="mt-6 text-center text-slate-500 text-xs opacity-50">
+                        {isReviewMode ? "再次答錯將會保留在複習清單中" : "按 Enter 送出答案"}
+                    </div>
+                </div>
+            );
+        }
+
+        function App() {
+            const [examType, setExamType] = useState(null); // 'midterm' | 'final' | null
+
+            const handleSelectMode = (type) => {
+                setExamType(type);
+            };
+
+            const handleBackToMenu = () => {
+                setExamType(null);
+            };
+
+            const getDataset = () => {
+                if (examType === 'midterm') return MIDTERM_QUESTIONS;
+                if (examType === 'final') return FINAL_QUESTIONS;
+                return [];
+            };
+
+            const getTitle = () => {
+                if (examType === 'midterm') return "期中";
+                if (examType === 'final') return "期末";
+                return "";
+            };
+
+            return (
+                <div className="w-full min-h-screen flex items-center justify-center">
+                    {!examType ? (
+                        <SelectionScreen onSelect={handleSelectMode} />
+                    ) : (
+                        <QuizApp 
+                            dataset={getDataset()} 
+                            examTitle={getTitle()} 
+                            onBackToMenu={handleBackToMenu}
+                        />
+                    )}
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>
