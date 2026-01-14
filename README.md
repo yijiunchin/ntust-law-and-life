@@ -3,14 +3,14 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-Live-success)](https://law-and-life.yijiun.me)
 
-一個專為臺灣科技大學（NTUST）法律與生活課程設計的互動式考前練習網站。提供期中考與期末考範圍的填空題練習，幫助學生有效複習法律知識。
+一個專為國立臺灣科技大學（NTUST）法律與生活課程設計的互動式考前練習網站。提供（1141）期中評量與期末評量範圍的填空題練習，幫助同學有效複習法律知識。
 
 🔗 **線上體驗：** [law-and-life.yijiun.me](https://law-and-life.yijiun.me)
 
 ## ✨ 功能特色
 
-- 📚 **期中考範圍**：涵蓋妨害司法、法律原則、刑法、醫療法等基礎法學概念
-- 🎓 **期末考範圍**：涵蓋消保法、勞動基準法、國家賠償、定型化契約等生活應用法律
+- 📚 **期中評量範圍**：涵蓋妨害司法、法律原則、刑法、醫療法等基礎法學概念
+- 🎓 **期末評量範圍**：涵蓋消保法、勞動基準法、國家賠償、定型化契約等生活應用法律
 - 🔄 **題目隨機**：每次練習都會隨機打亂題目順序，增加記憶挑戰
 - 🔥 **錯題特訓**：自動記錄答錯的題目，可針對弱點進行複習
 - 📊 **即時反饋**：立即顯示答案正確與否，並統計分數
@@ -27,16 +27,18 @@
 ### 本地運行
 
 1. **下載專案**
+
    ```bash
    git clone https://github.com/yijiunchin/ntust-law-and-life.git
    cd ntust-law-and-life
    ```
 
 2. **開啟檔案**
-   
+
    直接用瀏覽器開啟 `index.html` 檔案即可。
-   
-   或使用本地伺服器（推薦）：
+
+   或使用本地伺服器：
+
    ```bash
    # 使用 Python
    python -m http.server 8000
@@ -44,13 +46,13 @@
    # 或使用 Node.js
    npx http-server
    ```
-   
+
    然後在瀏覽器中訪問 `http://localhost:8000`
 
 ## 📖 使用說明
 
 1. **選擇考試範圍**
-   - 在首頁選擇「期中考範圍」或「期末考範圍」
+   - 在首頁選擇「期中評量範圍」或「期末評量範圍」
 
 2. **開始答題**
    - 閱讀題目，在填空處填入正確答案
@@ -90,12 +92,13 @@ ntust-law-and-life/
 ├── index.html          # 主應用程式（包含所有程式碼）
 ├── README.md           # 專案說明文件
 ├── LICENSE             # Apache 2.0 授權條款
-└── CNAME              # GitHub Pages 自訂網域設定
+└── CNAME               # GitHub Pages 自訂網域設定
 ```
 
 ## 📝 題庫說明
 
-### 期中考題庫
+### 期中評量題庫
+
 - 題目數量：60 題
 - 主題涵蓋：
   - 妨害司法公正
@@ -109,7 +112,8 @@ ntust-law-and-life/
   - 醫療責任
   - 消費者保護法（期中範圍）
 
-### 期末考題庫
+### 期末評量題庫
+
 - 題目數量：75 題
 - 主題涵蓋：
   - 消費者保護法
@@ -128,9 +132,11 @@ ntust-law-and-life/
 1. 編輯 `index.html` 檔案
 2. 找到對應的題庫陣列（`MIDTERM_QUESTIONS` 或 `FINAL_QUESTIONS`）
 3. 按照以下格式新增題目：
+
    ```javascript
    { q: "題目內容，用 ______ 標示填空處。", a: "答案" }
    ```
+
 4. 測試確認題目顯示正常
 5. 提交 Pull Request
 
@@ -149,18 +155,8 @@ ntust-law-and-life/
 
 ## 👤 作者
 
-**Yi Jiun Chin**
-
-- Website: [github.yijiun.me](https://github.yijiun.me)
-- GitHub: [@yijiunchin](https://github.com/yijiunchin)
+**Yi Jiun Chin** ([GitHub](https://github.yijiun.me))
 
 ## 🙏 致謝
 
-- 感謝臺灣科技大學法律與生活課程提供學習內容
-- 感謝所有使用者的回饋與建議
-
----
-
-<p align="center">
-  Made with ❤️ for NTUST Students
-</p>
+- 感謝陳星宏老師提供寶貴的法律知識與熱情的教導，最後讓我以 A+ 完成此課程。
